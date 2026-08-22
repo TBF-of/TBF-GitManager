@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ============================================
-#   TBF-GitManager v1.2 — by TBFPUMBA
+#   TBF-GitManager v1.2.1 — by TBFPUMBA
 #   Ultimate Git Manager for Termux / Linux
 # ============================================
 
@@ -23,7 +23,7 @@ BANNER_TBF = """[bold blue]
       ██║   ██████╔╝██║     
       ╚═╝   ╚═════╝ ╚═╝     
 [/bold blue][bright_blue]
-     [ TBF GIT MANAGER v1.2 ]
+     [ TBF GIT MANAGER v1.2.1 ]
 [/bright_blue]"""
 
 def clear():
@@ -37,7 +37,6 @@ def run_cmd(cmd):
         return "", str(e), 1
 
 def check_git():
-    """Перевіряє, чи встановлено Git"""
     out, _, code = run_cmd("git --version")
     if code != 0:
         console.print("[red]❌ Git не встановлено![/red]")
@@ -48,12 +47,18 @@ def check_git():
 def show_header():
     clear()
     console.print(Align.center(BANNER_TBF))
-    console.print(Align.center("[bold cyan]dev>[/bold cyan] [bold white]@TBFPUMBA[/bold white]   [bold cyan]series>[/bold cyan] [bold white]G Edition[/bold white]   [bold cyan]version>[/bold cyan] [bold white]v1.2[/bold white]"))
+    console.print(Align.center("[bold cyan]dev>[/bold cyan] [bold white]@TBFPUMBA[/bold white]   [bold cyan]series>[/bold cyan] [bold white]G Edition[/bold white]   [bold cyan]version>[/bold cyan] [bold white]v1.2.1[/bold white]"))
     console.print()
 
 def get_current_branch():
     out, _, code = run_cmd("git rev-parse --abbrev-ref HEAD 2>/dev/null")
     return out if code == 0 else "Не Git репозиторій"
+
+def get_remote():
+    out, _, code = run_cmd("git remote -v")
+    if code == 0 and out:
+        return out.split()[1]
+    return None
 
 def git_status():
     show_header()
@@ -103,6 +108,11 @@ def git_push():
         console.print("[red]❌ Це не Git-репозиторій![/red]")
         input("\n[Натисніть Enter...]")
         return
+    remote = get_remote()
+    if not remote:
+        console.print("[yellow]⚠️ Немає віддаленого репозиторію! Додайте remote (пункт 10).[/yellow]")
+        input("\n[Натисніть Enter...]")
+        return
     console.print(f"[bold cyan][+] Пуш змін на GitHub (гілка: {branch})...[/bold cyan]")
     out, err, code = run_cmd(f"git push origin {branch}")
     if code == 0:
@@ -143,10 +153,6 @@ def git_init():
     else:
         console.print(Panel(f"[bold red]❌ Помилка:[/bold red]\n{err}", border_style="red"))
     input("\n[Натисніть Enter для повернення в меню...]")
-
-# ============================================
-#   НОВІ ФУНКЦІЇ v1.2
-# ============================================
 
 def git_branches():
     show_header()
@@ -252,15 +258,13 @@ def git_remote_show():
         console.print(table)
     input("\n[Натисніть Enter...]")
 
-# ============================================
-#   ГОЛОВНЕ МЕНЮ
-# ============================================
-
 def main():
     while True:
         show_header()
         branch = get_current_branch()
-        info_panel = f"[bold yellow]Гілка:[/bold yellow] [bold green]{branch}[/bold green]  |  [bold yellow]Шлях:[/bold yellow] [dim]{os.getcwd()}[/dim]"
+        remote = get_remote()
+        remote_info = f"[bold green]{remote}[/bold green]" if remote else "[red]❌ Немає remote[/red]"
+        info_panel = f"[bold yellow]Гілка:[/bold yellow] [bold green]{branch}[/bold green]  |  [bold yellow]Remote:[/bold yellow] {remote_info}  |  [bold yellow]Шлях:[/bold yellow] [dim]{os.getcwd()}[/dim]"
         console.print(Panel(info_panel, title="📍 Інформація", border_style="cyan"))
         console.print()
         console.print(" [bold cyan]1.[/bold cyan] 📊 Статус репозиторію")
